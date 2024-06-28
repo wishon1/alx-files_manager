@@ -38,8 +38,8 @@ At the end of this project, you are expected to be able to explain to anyone, wi
 - how to setup and use a background worker
 
 ### Provided files
-[package.json]()
-[.eslintrc.js]()
-[babel.config.js]()
+- [package.json](https://github.com/wishon1/alx-files_manager/blob/master/package.json)
+- [.eslintrc.js](https://github.com/wishon1/alx-files_manager/blob/master/.eslintrc.js)
+- [babel.config.js](https://github.com/wishon1/alx-files_manager/blob/master/babel.config.js)
 and…
 Don’t forget to run `$ npm` install when you have the `package.json`
