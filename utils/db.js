@@ -8,20 +8,20 @@ class DBClient {
 
     const url = `mongodb://${host}:${port}/${database}`;
 
-	  this.client = new MongoClient(url, {
-		  useNewUrlParser: true,
-		  useUnifieldTopology: true,
-	  });
+    this.client = new MongoClient(url, {
+      useNewUrlParser: true,
+      useUnifieldTopology: true
+    });
 
-	  // connect the mongo database
-	  this.client.connect((err) => {
-		  if (err) {
-		    console.log('MongoDB connection error: ', err);
-		  } else {
+    // connect the mongo database
+    this.client.connect((err) => {
+      if (err) {
+        console.log('MongoDB connection error: ', err);
+      } else {
         this.db = this.client.db(`${database}`);
-		    console.log('MongoDB connected');
-		  }
-	  });
+        console.log('MongoDB connected');
+      }
+    });
   }
 
   isAlive() {
