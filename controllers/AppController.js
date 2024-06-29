@@ -28,7 +28,7 @@ export default class AppController {
    * @returns {object} JSON response with the number of users and files in the database.
    */
   static async getStats(request, response) {
-    const users = await dbClient.ndUsers();
+    const users = await dbClient.nbUsers(); // miss spell of nbUsers()
     const files = await dbClient.nbFiles();
 
     response.status(200).json({ users, files });
