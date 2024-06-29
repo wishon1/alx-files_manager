@@ -23,7 +23,7 @@ class UsersController {
       const usersCollection = db.collection('users');
       const user = await usersCollection.findOne({ email });
       if (user) {
-        return response.status(400).json({ error: 'Email already exists' });
+        return response.status(400).json({ error: 'Already exist' });
       }
 
       const hashedPassword = sha1(password);
@@ -31,12 +31,11 @@ class UsersController {
 
       const createdUser = {
         id: newUser.insertedId,
-        email
+        email,
       };
 
       return response.status(201).json(createdUser);
     } catch (error) {
-      console.error('Error creating user:', error);
       return response.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
   }
