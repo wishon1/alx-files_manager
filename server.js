@@ -5,6 +5,9 @@ const routes = require('./routes/index');
 // dotenv.config();
 
 const application = express();
+
+// Middleware to parse JSON bodies
+application.use(express.json());
 const port = process.env.PORT || 5000;
 
 // load all routes from the file routes/index.js

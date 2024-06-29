@@ -1,36 +1,43 @@
-import { sha1 } from 'sha1';
-
+const sha1 = require('sha1');
 const dbClient = require('../utils/db');
 
 class UsersController {
-  static async postUser(request, response) {
+  static async postNew(request, response) {
     const { email, password } = request.body;
 
     try {
       if (!email) {
-        return response.status(400).json({error: 'Missing email'});
+        return response.status(400).json({ error: 'Missing email' });
       }
       if (!password) {
-        return response.status(400).json({error: 'Missing password'});
+        return response.status(400).json({ error: 'Missing password' });
       }
-      // check if email already exist in our database
-      const users = dbClient.collection('user');
-      const user = await users.findOne({ email });
+
+      // Ensure dbClient is initialized and connected
+      const db = dbClient.client.db();
+      if (!db) {
+        throw new Error('Database not initialized');
+      }
+
+      // Check if email already exists in our database
+      const usersCollection = db.collection('users');
+      const user = await usersCollection.findOne({ email });
       if (user) {
-        return response.status(400).json({ error: 'Already exist' });
+        return response.status(400).json({ error: 'Email already exists' });
       }
 
       const hashedPassword = sha1(password);
-      const newUser = await users.insertOne({ email, password: hashedPassword });
+      const newUser = await usersCollection.insertOne({ email, password: hashedPassword });
 
       const createdUser = {
         id: newUser.insertedId,
-        email,
+        email
       };
 
       return response.status(201).json(createdUser);
     } catch (error) {
-      return response.status(500).json({ error: 'Internal Server Error' });
+      console.error('Error creating user:', error);
+      return response.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
   }
 }
