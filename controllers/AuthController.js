@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
-export default class AuthController {
+class AuthController {
   // GET /connect should sign-in the user by generating a new authentication token:
   static async getConnect(req, res) {
     const authHeader = req.headers.authorization;
@@ -34,10 +34,10 @@ export default class AuthController {
     const token = uuidv4();
 
     // Create a key: auth_<token> and use this key for storing in Redis (by using the redisClient created previously) the user ID for 24 hours:
-    await redisClient.set(`auth_${token}`, user._id.toString(), 'EX', 24 * 60 * 60);
+    await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60);
 
     // Return this token: { "token": "155342df-2399-41da-9e8c-458b6ac52a0c" } with a status code 200:
-    res.status(200).json({ token });
+    return res.status(200).json({ token });
   }
 
   // GET /disconnect should sign-out the user based on the token:
@@ -60,6 +60,10 @@ export default class AuthController {
     await redisClient.del(`auth_${token}`);
 
     // Return nothing with a status code 204:
-    res.status(204).send();
+    return res.status(204).send();
   }
+
 }
+
+module.exports = AuthController;
+
