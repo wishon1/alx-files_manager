@@ -62,6 +62,8 @@ class AuthController {
     // Return nothing with a status code 204:
     return res.status(204).send();
   }
+
 }
 
 module.exports = AuthController;
+
