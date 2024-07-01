@@ -122,45 +122,32 @@ class FilesController {
       return response.status(401).json({ error: 'Unauthorized' });
     }
 
-    const parentId = request.query.parentId || '0';
-    const page = parseInt(request.query.page, 10) || 0;
-    const pageSize = 20;
-    const skip = page * pageSize;
-
+    const { parentId = '0', page = 0 } = request.query;
+    const limit = 20;
+    const skip = page * limit;
     const query = {
       userId: user._id,
       parentId: parentId === '0' ? 0 : new ObjectId(parentId),
     };
 
-    const filesCollection = dbClient.db.collection('files');
+    const pipeline = [
+      { $match: query },
+      { $sort: { _id: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ];
 
     try {
-      const result = await filesCollection.aggregate([
-        { $match: query },
-        { $sort: { _id: -1 } },
-        {
-          $facet: {
-            metadata: [{ $count: 'total' }, { $addFields: { page } }],
-            data: [{ $skip: skip }, { $limit: pageSize }],
-          },
-        },
-      ]).toArray();
-
-      if (result.length > 0) {
-        const final = result[0].data.map((file) => {
-          const tmpFile = {
-            ...file,
-            id: file._id,
-          };
-          delete tmpFile._id;
-          delete tmpFile.localPath;
-          return tmpFile;
-        });
-        return response.status(200).json(final);
-      }
-      return response.status(404).json({ error: 'Not found' });
+      const files = await dbClient.db.collection('files').aggregate(pipeline).toArray();
+      const final = files.map((file) => {
+        const tmpFile = { ...file, id: file._id };
+        delete tmpFile._id;
+        delete tmpFile.localPath;
+        return tmpFile;
+      });
+      return response.status(200).json(final);
     } catch (err) {
-      console.log('Error occurred:', err);
+      console.error('Error occurred:', err);
       return response.status(500).json({ error: 'Internal Server Error' });
     }
   }
