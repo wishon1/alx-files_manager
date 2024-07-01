@@ -126,12 +126,16 @@ class FilesController {
     const page = parseInt(request.query.page, 10) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
-    let query;
-    if (parentId !== '0') {
+    /* let query;
+      if (parentId !== '0') {
       query = { userId: user._id, parentId: new ObjectId(parentId) };
     } else {
       query = { userId: user._id };
-    }
+    } */
+    const query = {
+      userId: user._id,
+      parentId: parentId === '0' ? 0 : new ObjectId(parentId),
+    };
 
     const filesCollection = dbClient.db.collection('files');
 
@@ -160,6 +164,7 @@ class FilesController {
       console.log('Error occurred:', err);
       return response.status(404).json({ error: 'Not found' });
     });
+    return null;
   }
 
   static async putPublish(request, response) {
