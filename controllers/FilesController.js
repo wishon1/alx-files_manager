@@ -23,7 +23,9 @@ class FilesController {
       return response.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { name, type, parentId = '0', isPublic = false, data } = request.body;
+    const {
+      name, type, parentId = '0', isPublic = false, data,
+    } = request.body;
 
     if (!name) {
       return response.status(400).json({ error: 'Missing name' });
@@ -49,7 +51,7 @@ class FilesController {
       name,
       type,
       isPublic,
-      parentId: parentId === '0' ? 0 : new ObjectId(parentId)
+      parentId: parentId === '0' ? 0 : new ObjectId(parentId),
     };
 
     if (type === 'folder') {

@@ -9,7 +9,9 @@ class AuthController {
   static async getConnect(req, res) {
     const authHeader = req.headers.authorization;
 
-    // By using the header Authorization and the technique of the Basic auth (Base64 of the <email>:<password>), find the user associated with this email and with this password:
+    // By using the header Authorization and the technique of the Basic
+    // auth (Base64 of the <email>:<password>), find the user associated with this
+    // email and with this password:
     if (!authHeader || !authHeader.startsWith('Basic ')) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -33,10 +35,12 @@ class AuthController {
     // Otherwise: Generate a random string (using uuidv4) as token
     const token = uuidv4();
 
-    // Create a key: auth_<token> and use this key for storing in Redis (by using the redisClient created previously) the user ID for 24 hours:
+    // Create a key: auth_<token> and use this key for storing in Redis
+    // (by using the redisClient created previously) the user ID for 24 hours:
     await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60);
 
-    // Return this token: { "token": "155342df-2399-41da-9e8c-458b6ac52a0c" } with a status code 200:
+    // Return this token: { "token": "155342df-2399-41da-9e8c-458b6ac52a0c" }
+    // with a status code 200:
     return res.status(200).json({ token });
   }
 
@@ -62,8 +66,6 @@ class AuthController {
     // Return nothing with a status code 204:
     return res.status(204).send();
   }
-
 }
 
 module.exports = AuthController;
-
