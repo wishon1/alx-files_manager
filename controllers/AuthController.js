@@ -40,6 +40,12 @@ class AuthController {
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    // Newly added
+    const userId = await redisClient.get(`auth_${token}`);
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     // Delete the token in Redis
     await redisClient.del(`auth_${token}`);

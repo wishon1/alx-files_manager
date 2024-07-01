@@ -62,7 +62,6 @@ class UsersController {
       // Retrieve the user from the database
       const user = await dbClient.db.collection('users').findOne(
         { _id: new ObjectId(userId) },
-        { projection: { email: 1 } },
       );
 
       // If user is not found in the database (though this should be rare if the token is valid):
