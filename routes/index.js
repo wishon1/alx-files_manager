@@ -1,6 +1,6 @@
 import express from 'express';
 import AppController from '../controllers/AppController';
-import FilesController from '../controllers/FilesController'
+import FilesController from '../controllers/FilesController';
 import UsersController from '../controllers/UsersController';
 import AuthController from '../controllers/AuthController';
 
