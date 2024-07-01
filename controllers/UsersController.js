@@ -34,7 +34,7 @@ class UsersController {
 
       const createdUser = {
         id: newUser.insertedId,
-        email
+        email,
       };
 
       return response.status(201).json(createdUser);
@@ -61,7 +61,7 @@ class UsersController {
 
       // Retrieve the user from the database
       const user = await dbClient.db.collection('users').findOne(
-        { _id: new ObjectId(userId) }
+        { _id: new ObjectId(userId) },
       );
 
       // If user is not found in the database (though this should be rare if the token is valid):
