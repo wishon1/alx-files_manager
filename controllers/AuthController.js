@@ -26,8 +26,8 @@ class AuthController {
 
     const token = uuidv4();
     const key = `auth_${token}`;
-    const hoursForExpiration = 24;
-    await redisClient.set(key, user._id.toString(), hoursForExpiration * 3600);
+    // const hoursForExpiration = 24;
+    await redisClient.set(key, user._id.toString(), 24 * 60 * 60);
 
     return res.status(200).json({ token });
   }
@@ -51,7 +51,7 @@ class AuthController {
     await redisClient.del(`auth_${token}`);
 
     // Return nothing with a status code 204:
-    return res.status(204).send();
+    return res.status(204).json({});
   }
 }
 
