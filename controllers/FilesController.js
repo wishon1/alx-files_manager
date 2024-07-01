@@ -7,7 +7,7 @@ import redisClient from '../utils/redis';
 
 class FilesController {
   static async getUser(request) {
-    const token = request.header('X-Token');
+    const token = request.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
       return null;
@@ -98,21 +98,21 @@ class FilesController {
   }
 
   static async getShow(request, response) {
-    const getUser = await FilesController.getUser(request);
-    if (!getUser) {
+    const user = await FilesController.getUser(request);
+    if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
 
-    const usrId = request.params.id;
-    const files = await dbClient.db.collection('files').findOne({
-      id: new ObjectId(usrId),
-      userId: getUser._id,
+    const fileId = request.params.id;
+    const file = await dbClient.db.collection('files').findOne({
+      _id: new ObjectId(fileId),
+      userId: user._id,
     });
 
-    if (!files) {
+    if (!file) {
       return response.status(404).json({ error: 'Not found' });
     }
-    return response.status(200).json(files);
+    return response.status(200).json(file);
   }
 
   static async getIndex(request, response) {
@@ -126,12 +126,7 @@ class FilesController {
     const page = parseInt(request.query.page, 10) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
-    /* let query;
-      if (parentId !== '0') {
-      query = { userId: user._id, parentId: new ObjectId(parentId) };
-    } else {
-      query = { userId: user._id };
-    } */
+
     const query = {
       userId: user._id,
       parentId: parentId === '0' ? 0 : new ObjectId(parentId),
@@ -139,17 +134,19 @@ class FilesController {
 
     const filesCollection = dbClient.db.collection('files');
 
-    filesCollection.aggregate([
-      { $match: query },
-      { $sort: { _id: -1 } },
-      {
-        $facet: {
-          metadata: [{ $count: 'total' }, { $addFields: { page } }],
-          data: [{ $skip: skip }, { $limit: pageSize }],
+    try {
+      const result = await filesCollection.aggregate([
+        { $match: query },
+        { $sort: { _id: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }, { $addFields: { page } }],
+            data: [{ $skip: skip }, { $limit: pageSize }],
+          },
         },
-      },
-    ]).toArray((err, result) => {
-      if (result) {
+      ]).toArray();
+
+      if (result.length > 0) {
         const final = result[0].data.map((file) => {
           const tmpFile = {
             ...file,
@@ -161,56 +158,60 @@ class FilesController {
         });
         return response.status(200).json(final);
       }
-      console.log('Error occurred:', err);
       return response.status(404).json({ error: 'Not found' });
-    });
-    return null;
+    } catch (err) {
+      console.log('Error occurred:', err);
+      return response.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 
   static async putPublish(request, response) {
-    const fileId = request.params.id;
-    const token = request.headers['X-Token'];
-
-    // retrieve user based on token
-    const user = await redisClient.get(`auth_${token}`);
+    const user = await FilesController.getUser(request);
     if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
-    // retrieve file document with fileId and user owner and update it
+
+    const fileId = request.params.id;
     const files = dbClient.db.collection('files');
 
-    const file = await files.findOneAndUpdate(
-      { _id: new ObjectId(fileId), userId: new ObjectId(user) },
-      { $set: { isPublic: true } },
-      { returnOriginal: false },
-    );
-    if (!file) {
-      return response.status(404).json({ error: 'Not found' });
+    try {
+      const result = await files.findOneAndUpdate(
+        { _id: new ObjectId(fileId), userId: user._id },
+        { $set: { isPublic: true } },
+        { returnOriginal: false },
+      );
+      if (!result.value) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+      return response.status(200).json(result.value);
+    } catch (error) {
+      return response.status(500).json({ error: 'Internal Server Error' });
     }
-    return response.status(200).json(file.value);
   }
 
   static async putUnpublish(request, response) {
-    const fileId = request.params.id;
-    const token = request.headers['x-token'];
-
-    // retrieve user based on token
-    const user = await redisClient.get(`auth_${token}`);
+    const user = await FilesController.getUser(request);
     if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
-    // retrieve file document with fileId and user owner and update it
+
+    const fileId = request.params.id;
     const files = dbClient.db.collection('files');
 
-    const file = await files.findOneAndUpdate(
-      { _id: new ObjectId(fileId), userId: new ObjectId(user) },
-      { $set: { isPublic: false } },
-      { returnOriginal: false },
-    );
-    if (!file) {
-      return response.status(404).json({ error: 'Not found' });
+    try {
+      const result = await files.findOneAndUpdate(
+        { _id: new ObjectId(fileId), userId: user._id },
+        { $set: { isPublic: false } },
+        { returnOriginal: false },
+      );
+      if (!result.value) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+      return response.status(200).json(result.value);
+    } catch (error) {
+      return response.status(500).json({ error: 'Internal Server Error' });
     }
-    return response.status(200).json(file.value);
   }
 }
+
 module.exports = FilesController;
