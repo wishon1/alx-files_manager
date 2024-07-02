@@ -1,8 +1,12 @@
 import { ObjectId } from 'mongodb';
+import Queue from 'bull';
+
 import redisClient from '../utils/redis';
 
 const sha1 = require('sha1');
 const dbClient = require('../utils/db');
+
+const userQueue = new Queue('userQueue', 'redis://127.0.0.1:6379');
 
 class UsersController {
   static async postNew(request, response) {
@@ -36,7 +40,7 @@ class UsersController {
         id: newUser.insertedId,
         email,
       };
-
+      userQueue.add({ userId: createdUser.insertedId });
       return response.status(201).json(createdUser);
     } catch (error) {
       return response.status(500).json({ error: 'Internal Server Error', details: error.message });
