@@ -1,15 +1,10 @@
-import Bull from 'bull';
+import Queue from 'bull';
 import imageThumbnail from 'image-thumbnail';
 import { promises as fs } from 'fs';
 import { ObjectId } from 'mongodb';
 import dbClient from './utils/db';
 
-const fileQueue = new Bull('fileQueue', {
-  redis: {
-    host: '127.0.0.1',
-    port: 6379,
-  },
-});
+const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
 
 fileQueue.process(async (job) => {
   const { fileId, userId } = job.data;
