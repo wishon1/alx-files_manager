@@ -210,45 +210,28 @@ class FilesController {
 
   static async getFile(request, response) {
     const { id } = request.params;
-    const files = dbClient.db.collection('files');
-    const idObject = new ObjectId(id);
+    const file = await dbClient.db.collection('files').findOne({ _id: new ObjectId(id) });
+
+    if (!file) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+    const user = await FilesController.getUser(request);
+    if (!file.isPublic && (!user || user._id.toString() !== file.userId.toString())) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+    if (file.type === 'folder') {
+      return response.status(400).json({ error: "A folder doesn't have content" });
+    }
 
     try {
-      const file = await files.findOne({ _id: idObject });
-
-      if (!file) {
-        console.log('File not found');
+      const filePath = file.localPath;
+      if (!await fs.access(filePath).then(() => true).catch(() => false)) {
         return response.status(404).json({ error: 'Not found' });
       }
-
-      const user = await FilesController.getUser(request);
-      if (!file.isPublic && (!user || user._id.toString() !== file.userId.toString())) {
-        console.log('Permission issue');
-        return response.status(404).json({ error: 'Not found' });
-      }
-
-      if (file.type === 'folder') {
-        return response.status(400).json({ error: "A folder doesn't have content" });
-      }
-
-      let fileName = file.localPath;
-      const size = request.query.size;
-      if (size) {
-        fileName = `${file.localPath}_${size}`;
-      }
-
-      try {
-        await fs.access(fileName);
-      } catch (accessError) {
-        console.log('file cannot be accessed');
-        return response.status(404).json({ error: 'Not found' });
-      }
-
-      const data = await fs.readFile(fileName);
-      const contentType = mime.contentType(file.name);
-      return response.header('Content-Type', contentType).status(200).send(data);
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      const fileContent = await fs.readFile(filePath);
+      return response.status(200).header('Content-Type', mimeType).send(fileContent);
     } catch (error) {
-      console.error('Error occurred:', error);
       return response.status(500).json({ error: 'Internal Server Error' });
     }
   }
