@@ -8,6 +8,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
 const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
+const userQueue = new Queue('userQueue', 'redis://127.0.0.1:6379');
 
 class FilesController {
   static async getUser(request) {
@@ -212,7 +213,7 @@ class FilesController {
     const { id } = request.params;
     const { size } = request.query;
     const valideSizes = ['500', '250', '200'];
-  
+
     const file = await dbClient.db.collection('files').findOne({ _id: new ObjectId(id) });
 
     if (!file) {
@@ -243,5 +244,21 @@ class FilesController {
     }
   }
 }
+
+userQueue.process(async (job) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  const user = await dbClient.db.collection('users').findOne({
+    _id: new ObjectId(userId),
+  });
+  if (!user) {
+    throw new Error('User not found');
+  }
+  console.log(`Welcome ${user.email}!`);
+});
 
 module.exports = FilesController;
