@@ -9,7 +9,6 @@ import redisClient from '../utils/redis';
 
 const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
 
-
 class FilesController {
   static async getUser(request) {
     const token = request.headers['x-token'];
@@ -211,9 +210,6 @@ class FilesController {
 
   static async getFile(request, response) {
     const { id } = request.params;
-    const { size } = request.query;
-    const valideSizes = ['500', '250', '200'];
-  
     const file = await dbClient.db.collection('files').findOne({ _id: new ObjectId(id) });
 
     if (!file) {
@@ -228,11 +224,7 @@ class FilesController {
     }
 
     try {
-      let filePath = file.localPath;
-
-      if (size && valideSizes.includes(size)) {
-        filePath = `${filePath}_${size}`;
-      }
+      const filePath = file.localPath;
       if (!await fs.access(filePath).then(() => true).catch(() => false)) {
         return response.status(404).json({ error: 'Not found' });
       }
